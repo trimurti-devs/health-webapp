@@ -13,6 +13,11 @@ from utils import allowed_file, create_notification, get_dashboard_stats
 # Authentication Routes
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        if current_user.is_staff():
+            return redirect(url_for('staff_dashboard'))
+        else:
+            return redirect(url_for('patient_dashboard'))
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
