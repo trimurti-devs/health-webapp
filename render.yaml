@@ -6,10 +6,8 @@ services:
     startCommand: gunicorn main:app
     envVars:
       - key: SESSION_SECRET
-        value: your_session_secret_here
         sync: false
       - key: DATABASE_URL
-        value: your_database_url_here
         sync: false
     plan: free
     region: oregon
