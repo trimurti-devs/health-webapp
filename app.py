@@ -11,8 +11,6 @@ def nl2br(value):
         return ''
     return value.replace('\n', '<br>\n')
 
-app = Flask(__name__)
-app.jinja_env.filters['nl2br'] = nl2br
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from sqlalchemy.orm import DeclarativeBase
@@ -28,6 +26,7 @@ db = SQLAlchemy(model_class=Base)
 
 # Create the app
 app = Flask(__name__)
+app.jinja_env.filters['nl2br'] = nl2br
 app.secret_key = os.environ.get("SESSION_SECRET")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
