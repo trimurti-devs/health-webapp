@@ -13,6 +13,10 @@ from utils import allowed_file, create_notification, get_dashboard_stats
 # Authentication Routes
 @app.route('/')
 def index():
+    return redirect(url_for('home'))
+
+@app.route('/home')
+def home():
     if current_user.is_authenticated:
         if current_user.is_staff():
             return redirect(url_for('staff_dashboard'))
