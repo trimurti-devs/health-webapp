@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}Book Lab Test - Healthcare24/7{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="header">
+    <div class="container header-top">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>Healthcare24/7</span>
+        </div>
+        <div class="search-bar">
+            <form method="GET" action="{{ url_for('lab_tests') }}" class="d-flex">
+                <input type="text" name="search" placeholder="Search lab tests..." class="form-control">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {{ current_user.full_name }}
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('patient_dashboard') }}">Dashboard</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <nav class="nav-bar">
+        <div class="container">
+            <ul class="nav justify-content-center">
+                <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="{{ url_for('buy_medicines') }}" class="nav-link">Buy Medicines</a></li>
+                <li class="nav-item"><a href="{{ url_for('book_appointment') }}" class="nav-link">Find Doctors</a></li>
+                <li class="nav-item"><a href="{{ url_for('lab_tests') }}" class="nav-link active">Lab Tests</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Health Records</a></li>
+                <li class="nav-item"><a href="{{ url_for('talk_support') }}" class="nav-link">Talk Support</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<main class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('lab_tests') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2 class="mb-0">Book Lab Test</h2>
+            </div>
+            
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                
+                <!-- Test Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-vial me-2"></i>Test Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-vial fa-3x text-primary"></i>
+                            </div>
+                            <div>
+                                <h4>{{ test.name }}</h4>
+                                {% if test.category %}
+                                    <span class="badge bg-light text-dark mb-2">{{ test.category }}</span>
+                                {% endif %}
+                                <p class="text-muted">{{ test.description }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Sample Type</label>
+                                    <p class="mb-0">{{ test.sample_type.title() if test.sample_type else 'N/A' }}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Result Time</label>
+                                    <p class="mb-0">{{ test.result_time_hours }} hours</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Fasting Required</label>
+                                    <p class="mb-0">
+                                        {% if test.fasting_required %}
+                                            <span class="badge bg-warning text-dark">Yes - 8-12 hours</span>
+                                        {% else %}
+                                            <span class="badge bg-success">No</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Test Price</label>
+                                    <p class="mb-0">
+                                        <span class="h5 text-primary">${{ "%.2f"|format(test.price) }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if test.preparation_instructions %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>Preparation Instructions
+                            </h6>
+                            <p class="mb-0">{{ test.preparation_instructions }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Booking Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-plus me-2"></i>Booking Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.booking_date.label(class="form-label") }}
+                                {{ form.booking_date(class="form-control") }}
+                                {% if form.booking_date.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.booking_date.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Select your preferred appointment date and time</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.sample_collection_date.label(class="form-label") }}
+                                {{ form.sample_collection_date(class="form-control") }}
+                                {% if form.sample_collection_date.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.sample_collection_date.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Optional: Schedule home sample collection</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Collection Method</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="collection_method" id="labVisit" value="lab_visit" checked>
+                                <label class="form-check-label" for="labVisit">
+                                    <i class="fas fa-building me-2"></i>Visit Lab Center
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="collection_method" id="homeCollection" value="home_collection">
+                                <label class="form-check-label" for="homeCollection">
+                                    <i class="fas fa-home me-2"></i>Home Sample Collection (+$15)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="homeCollectionDetails" style="display: none;">
+                            <div class="mb-3">
+                                <label for="homeAddress" class="form-label">Home Address</label>
+                                <textarea class="form-control" id="homeAddress" rows="3" placeholder="Enter your complete address for sample collection...">{{ current_user.address or '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="contactNumber" class="form-label">Contact Number</label>
+                                <input type="tel" class="form-control" id="contactNumber" value="{{ current_user.phone or '' }}" placeholder="Your contact number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Patient Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Patient Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" value="{{ current_user.full_name }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" value="{{ current_user.phone or 'Not provided' }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="text" class="form-control" value="{{ current_user.date_of_birth.strftime('%B %d, %Y') if current_user.date_of_birth else 'Not provided' }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="additionalNotes" class="form-label">Additional Notes (Optional)</label>
+                            <textarea class="form-control" id="additionalNotes" rows="2" placeholder="Any additional information or special requirements..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('lab_tests') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Tests
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-calendar-check me-2"></i>Book Test
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Booking Summary -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Booking Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>{{ test.name }}</h6>
+                        <p class="text-muted small mb-0">{{ test.category }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Test Price:</span>
+                        <span>${{ "%.2f"|format(test.price) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Service Fee:</span>
+                        <span>$5.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" id="collectionFee" style="display: none;">
+                        <span>Home Collection:</span>
+                        <span>$15.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (8%):</span>
+                        <span id="taxAmount">${{ "%.2f"|format((test.price + 5) * 0.08) }}</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong id="totalAmount">${{ "%.2f"|format((test.price + 5) * 1.08) }}</strong>
+                    </div>
+                    
+                    <div class="text-center mb-3">
+                        <small class="text-muted">Payment will be processed after confirmation</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lab Information -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>Lab Center Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6>Healthcare24/7 Lab Center</h6>
+                    <p class="small text-muted mb-2">123 Medical Center Drive<br>Downtown, City 12345</p>
+                    <p class="small text-muted mb-2">
+                        <i class="fas fa-phone me-1"></i>(555) 123-4567<br>
+                        <i class="fas fa-clock me-1"></i>Mon-Sat: 7:00 AM - 6:00 PM
+                    </p>
+                    <a href="#" class="btn btn-outline-success btn-sm w-100">
+                        <i class="fas fa-map me-1"></i>View on Map
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Important Notes -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Important Notes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small mb-0">
+                        {% if test.fasting_required %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Fast for 8-12 hours before the test
+                        </li>
+                        {% endif %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Bring a valid ID for verification
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Arrive 15 minutes early for registration
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Results will be available online
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer py-4 bg-light mt-5">
+    <div class="container text-center">
+        <p>&copy; 2025 Healthcare24/7. All rights reserved.</p>
+        <p>Providing quality healthcare services with compassion and excellence.</p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Collection method toggle
+document.querySelectorAll('input[name="collection_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const homeCollectionDetails = document.getElementById('homeCollectionDetails');
+        const collectionFeeRow = document.getElementById('collectionFee');
+        const taxAmount = document.getElementById('taxAmount');
+        const totalAmount = document.getElementById('totalAmount');
+        
+        const basePrice = {{ test.price }};
+        const serviceFee = 5.00;
+        let collectionFee = 0;
+        
+        if (this.value === 'home_collection') {
+            homeCollectionDetails.style.display = 'block';
+            collectionFeeRow.style.display = 'flex';
+            collectionFee = 15.00;
+        } else {
+            homeCollectionDetails.style.display = 'none';
+            collectionFeeRow.style.display = 'none';
+            collectionFee = 0;
+        }
+        
+        const subtotal = basePrice + serviceFee + collectionFee;
+        const tax = subtotal * 0.08;
+        const total = subtotal + tax;
+        
+        taxAmount.textContent = '$' + tax.toFixed(2);
+        totalAmount.textContent = '$' + total.toFixed(2);
+    });
+});
+
+// Set minimum date to tomorrow
+document.addEventListener('DOMContentLoaded', function() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowString = tomorrow.toISOString().slice(0, 16);
+    
+    const bookingDateInput = document.getElementById('booking_date');
+    const collectionDateInput = document.getElementById('sample_collection_date');
+    
+    if (bookingDateInput) {
+        bookingDateInput.min = tomorrowString;
+    }
+    
+    if (collectionDateInput) {
+        collectionDateInput.min = tomorrowString;
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(event) {
+    const collectionMethod = document.querySelector('input[name="collection_method"]:checked').value;
+    
+    if (collectionMethod === 'home_collection') {
+        const homeAddress = document.getElementById('homeAddress').value.trim();
+        const contactNumber = document.getElementById('contactNumber').value.trim();
+        
+        if (!homeAddress) {
+            event.preventDefault();
+            alert('Please enter your home address for sample collection.');
+            return;
+        }
+        
+        if (!contactNumber) {
+            event.preventDefault();
+            alert('Please enter your contact number.');
+            return;
+        }
+    }
+    
+    // Confirmation dialog
+    const testName = '{{ test.name }}';
+    const totalAmount = document.getElementById('totalAmount').textContent;
+    
+    if (!confirm(`Confirm booking for ${testName}?\nTotal Amount: ${totalAmount}`)) {
+        event.preventDefault();
+    }
+});
+</script>
+{% endblock %}

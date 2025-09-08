@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Navigation Header -->
+        <div class="col-12">
+            {# Removed redundant navbar to avoid duplicate dropdown menu #}
+            {# 
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <i class="fas fa-heartbeat text-primary"></i>
+                        Healthcare24/7
+                    </a>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle fa-lg"></i>
+                                {{ current_user.full_name }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            #}
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-12">
+            <div class="container-fluid p-4">
+                <div class="row mb-4">
+                    <div class="col">
+                        <h1>Welcome back, {{ current_user.first_name }}!</h1>
+                        <p class="text-muted">Here's what's happening with your health today.</p>
+                    </div>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('patient_appointments') }}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2 text-muted">Total Appointments</h6>
+                                        <h3 class="card-title mb-0">{{ stats.total_appointments }}</h3>
+                                    </div>
+                                    <div class="text-primary">
+                                        <i class="fas fa-calendar-alt fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                    <a href="{{ url_for('patient_appointments', filter='upcoming') }}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2 text-muted">Upcoming Appointments</h6>
+                                        <h3 class="card-title mb-0">{{ stats.upcoming_appointments }}</h3>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        {% if messages %}
+                        <a href="{{ url_for('view_message', message_id=messages[0].id) }}" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2 text-muted">Unread Messages</h6>
+                                            <h3 class="card-title mb-0">{{ stats.unread_messages }}</h3>
+                                        </div>
+                                        <div class="text-warning">
+                                            <i class="fas fa-envelope fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('patient_messages') }}" class="text-decoration-none">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-subtitle mb-2 text-muted">Unread Messages</h6>
+                                            <h3 class="card-title mb-0">{{ stats.unread_messages }}</h3>
+                                        </div>
+                                        <div class="text-warning">
+                                            <i class="fas fa-envelope fa-2x"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col">
+                        <h4>Quick Actions</h4>
+                        <div class="row">
+                            <div class="col-md-2 col-sm-6 mb-3">
+                                <a href="{{ url_for('book_appointment') }}" class="btn btn-outline-primary btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
+                                    <i class="fas fa-user-md fa-2x mb-2"></i>
+                                    <span>Book Appointment</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-3">
+                                <a href="{{ url_for('buy_medicines') }}" class="btn btn-outline-success btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
+                                    <i class="fas fa-pills fa-2x mb-2"></i>
+                                    <span>Order Medicines</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-3">
+                                <a href="{{ url_for('lab_tests') }}" class="btn btn-outline-info btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
+                                    <i class="fas fa-vial fa-2x mb-2"></i>
+                                    <span>Lab Tests</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-3">
+                                <a href="{{ url_for('send_message') }}" class="btn btn-outline-warning btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
+                                    <i class="fas fa-comments fa-2x mb-2"></i>
+                                    <span>Messages</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-3">
+                                <a href="{{ url_for('talk_support') }}" class="btn btn-outline-dark btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
+                                    <i class="fas fa-robot fa-2x mb-2"></i>
+                                    <span>AI Support</span>
+                                </a>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-3">
+                            <a href="{{ url_for('health_records') }}" class="btn btn-outline-secondary btn-lg w-100 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
+                                <i class="fas fa-heart fa-2x mb-2"></i>
+                                <span>Health Records</span>
+                            </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Recent Appointments -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Recent Appointments</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if appointments %}
+                                    {% for appointment in appointments %}
+                                    <a href="{{ url_for('patient_appointment_detail', appointment_id=appointment.id) }}" class="text-decoration-none text-reset">
+                                        <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                                            <div>
+                                                <h6 class="mb-1">Dr. {{ appointment.doctor.full_name }}</h6>
+                                                <small class="text-muted">{{ appointment.reason }}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted d-block">{{ appointment.appointment_date.strftime('%b %d, %Y') }}</small>
+                                                <span class="badge bg-{{ 'success' if appointment.status == 'confirmed' else 'warning' }}">{{ appointment.status.title() }}</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No appointments found.</p>
+                                {% endif %}
+                                <div class="text-center mt-3">
+                                    <a href="{{ url_for('book_appointment') }}" class="btn btn-primary btn-sm">View All</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Messages -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Recent Messages</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if messages %}
+                                    {% for message in messages %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div>
+                                            <h6 class="mb-1">{{ message.sender.full_name }}</h6>
+                                            <small class="text-muted">{{ message.subject }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">{{ message.created_at.strftime('%b %d') }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No messages found.</p>
+                                {% endif %}
+                                <div class="text-center mt-3">
+                                    <a href="{{ url_for('patient_messages') }}" class="btn btn-primary btn-sm">View All</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

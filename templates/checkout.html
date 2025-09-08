@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Healthcare24/7{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="header">
+    <div class="container header-top">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>Healthcare24/7</span>
+        </div>
+        <div class="search-bar">
+            <form method="GET" action="{{ url_for('buy_medicines') }}" class="d-flex">
+                <input type="text" name="search" placeholder="Search medicines..." class="form-control">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {{ current_user.full_name }}
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('patient_dashboard') }}">Dashboard</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</header>
+
+<main class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="mb-4">
+                <i class="fas fa-credit-card me-2"></i>Checkout
+            </h2>
+            
+            <!-- Progress Steps -->
+            <div class="checkout-steps mb-4">
+                <div class="d-flex justify-content-between">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Delivery</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Payment</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Confirmation</div>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                
+                <!-- Delivery Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck me-2"></i>Delivery Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.delivery_address.label(class="form-label") }}
+                            {{ form.delivery_address(class="form-control", rows="4", placeholder="Enter your complete delivery address...") }}
+                            {% if form.delivery_address.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.delivery_address.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="deliveryDate" class="form-label">Preferred Delivery Date</label>
+                                <input type="date" class="form-control" id="deliveryDate" name="delivery_date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="deliveryTime" class="form-label">Preferred Time Slot</label>
+                                <select class="form-select" id="deliveryTime" name="delivery_time">
+                                    <option value="">Select time slot</option>
+                                    <option value="morning">Morning (9 AM - 12 PM)</option>
+                                    <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                                    <option value="evening">Evening (4 PM - 8 PM)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sameAsProfile">
+                            <label class="form-check-label" for="sameAsProfile">
+                                Use address from my profile
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card me-2"></i>Payment Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="payment-methods mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="credit_card" checked>
+                                <label class="form-check-label" for="creditCard">
+                                    <i class="fas fa-credit-card me-2"></i>Credit/Debit Card
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="cashOnDelivery" value="cod">
+                                <label class="form-check-label" for="cashOnDelivery">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="payment_method" id="insurance" value="insurance">
+                                <label class="form-check-label" for="insurance">
+                                    <i class="fas fa-shield-alt me-2"></i>Insurance Coverage
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Credit Card Details -->
+                        <div id="cardDetails" class="card-details">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="cardNumber" class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cardName" class="form-label">Cardholder Name</label>
+                                    <input type="text" class="form-control" id="cardName" placeholder="John Doe">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="expiryDate" class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="cvv" placeholder="123" maxlength="4">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Special Instructions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>Special Instructions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" rows="3" placeholder="Any special delivery instructions or notes..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('view_cart') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check me-2"></i>Place Order
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Cart Items -->
+                    {% for item_id, item in cart.items() %}
+                    <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                        <div>
+                            <h6 class="mb-0">{{ item.name }}</h6>
+                            <small class="text-muted">Qty: {{ item.quantity }}</small>
+                        </div>
+                        <span>${{ "%.2f"|format(item.price * item.quantity) }}</span>
+                    </div>
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <!-- Totals -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Fee:</span>
+                        <span id="deliveryFee">$5.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (8%):</span>
+                        <span>${{ "%.2f"|format(total * 0.08) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Processing Fee:</span>
+                        <span id="processingFee">$2.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <strong>${{ "%.2f"|format(total + 5 + (total * 0.08) + 2) }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estimated Delivery -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shipping-fast me-2"></i>Estimated Delivery
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <i class="fas fa-calendar me-2 text-success"></i>
+                        <strong>3-5 business days</strong>
+                    </p>
+                    <p class="mb-0 small text-muted">
+                        Standard delivery within your city. Express delivery available at checkout.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Security Notice -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock fa-2x text-success mb-2"></i>
+                    <p class="small text-muted mb-0">
+                        Your payment information is encrypted and secure. We never store your card details.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer py-4 bg-light mt-5">
+    <div class="container text-center">
+        <p>&copy; 2025 Healthcare24/7. All rights reserved.</p>
+        <p>Providing quality healthcare services with compassion and excellence.</p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Payment method toggle
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const cardDetails = document.getElementById('cardDetails');
+        const processingFeeElement = document.getElementById('processingFee');
+        const deliveryFeeElement = document.getElementById('deliveryFee');
+        
+        if (this.value === 'credit_card') {
+            cardDetails.style.display = 'block';
+            processingFeeElement.textContent = '$2.00';
+        } else if (this.value === 'cod') {
+            cardDetails.style.display = 'none';
+            processingFeeElement.textContent = '$5.00'; // Higher fee for COD
+        } else if (this.value === 'insurance') {
+            cardDetails.style.display = 'none';
+            processingFeeElement.textContent = '$0.00';
+            deliveryFeeElement.textContent = '$0.00'; // Free delivery with insurance
+        }
+    });
+});
+
+// Set minimum delivery date to tomorrow
+document.addEventListener('DOMContentLoaded', function() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('deliveryDate').min = tomorrow.toISOString().split('T')[0];
+});
+
+// Card number formatting
+document.getElementById('cardNumber').addEventListener('input', function() {
+    let value = this.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+    let formattedInputValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    
+    if (formattedInputValue.length > 19) {
+        formattedInputValue = formattedInputValue.substring(0, 19);
+    }
+    
+    this.value = formattedInputValue;
+});
+
+// Expiry date formatting
+document.getElementById('expiryDate').addEventListener('input', function() {
+    let value = this.value.replace(/\D/g, '');
+    
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    
+    this.value = value;
+});
+
+// CVV validation
+document.getElementById('cvv').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+// Auto-fill address from profile
+document.getElementById('sameAsProfile').addEventListener('change', function() {
+    if (this.checked) {
+        // In a real application, this would fetch the user's address from their profile
+        document.querySelector('textarea[name="delivery_address"]').value = 
+            "{{ current_user.address or '123 Main St, City, State 12345' }}";
+    } else {
+        document.querySelector('textarea[name="delivery_address"]').value = '';
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(event) {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    const deliveryAddress = document.querySelector('textarea[name="delivery_address"]').value.trim();
+    
+    if (!deliveryAddress) {
+        event.preventDefault();
+        alert('Please enter a delivery address.');
+        return;
+    }
+    
+    if (paymentMethod === 'credit_card') {
+        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        const cardName = document.getElementById('cardName').value.trim();
+        const expiryDate = document.getElementById('expiryDate').value;
+        const cvv = document.getElementById('cvv').value;
+        
+        if (!cardNumber || cardNumber.length < 13) {
+            event.preventDefault();
+            alert('Please enter a valid card number.');
+            return;
+        }
+        
+        if (!cardName) {
+            event.preventDefault();
+            alert('Please enter the cardholder name.');
+            return;
+        }
+        
+        if (!expiryDate || expiryDate.length < 5) {
+            event.preventDefault();
+            alert('Please enter a valid expiry date.');
+            return;
+        }
+        
+        if (!cvv || cvv.length < 3) {
+            event.preventDefault();
+            alert('Please enter a valid CVV.');
+            return;
+        }
+    }
+    
+    // Show confirmation before placing order
+    if (!confirm('Are you sure you want to place this order?')) {
+        event.preventDefault();
+    }
+});
+</script>
+
+<style>
+.checkout-steps {
+    margin-bottom: 2rem;
+}
+
+.checkout-steps .step {
+    text-align: center;
+    position: relative;
+}
+
+.checkout-steps .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-weight: bold;
+}
+
+.checkout-steps .step.active .step-number {
+    background-color: #007bff;
+    color: white;
+}
+
+.checkout-steps .step-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.checkout-steps .step.active .step-label {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.card-details {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .checkout-steps .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}

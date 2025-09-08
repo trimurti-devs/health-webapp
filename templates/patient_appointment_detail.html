@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment Details - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2>Appointment Details</h2>
+    <div class="card shadow-sm p-4">
+        <h4>Doctor: Dr. {{ appointment.doctor.full_name }}</h4>
+        <p><strong>Date & Time:</strong> {{ appointment.appointment_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        <p><strong>Status:</strong> <span class="badge bg-info text-uppercase">{{ appointment.status }}</span></p>
+        <p><strong>Reason for Visit:</strong> {{ appointment.reason }}</p>
+        {% if appointment.notes %}
+        <p><strong>Additional Notes:</strong> {{ appointment.notes }}</p>
+        {% endif %}
+        <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block title %}Add Medical Record - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('staff_patient_profile', patient_id=patient.id) }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2 class="mb-0">
+                    <i class="fas fa-file-medical me-2"></i>Add Medical Record
+                </h2>
+            </div>
+            
+            <!-- Patient Information Header -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            {{ patient.first_name[0] }}{{ patient.last_name[0] }}
+                        </div>
+                        <div>
+                            <h4 class="mb-1">{{ patient.full_name }}</h4>
+                            <p class="text-muted mb-0">
+                                Patient ID: {{ patient.id }} | 
+                                {% if patient.date_of_birth %}
+                                    Age: {{ (2025 - patient.date_of_birth.year) }} years |
+                                {% endif %}
+                                {{ patient.gender or 'Gender not specified' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <!-- Medical Information -->
+                    <div class="col-md-8">
+                        <!-- Diagnosis and Symptoms -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-stethoscope me-2"></i>Clinical Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form.diagnosis.label(class="form-label") }}
+                                    {{ form.diagnosis(class="form-control", rows="3", placeholder="Enter primary and secondary diagnoses...") }}
+                                    {% if form.diagnosis.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.diagnosis.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.symptoms.label(class="form-label") }}
+                                    {{ form.symptoms(class="form-control", rows="3", placeholder="Describe patient's symptoms...") }}
+                                    {% if form.symptoms.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.symptoms.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.treatment.label(class="form-label") }}
+                                    {{ form.treatment(class="form-control", rows="3", placeholder="Treatment plan and procedures...") }}
+                                    {% if form.treatment.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.treatment.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.prescription.label(class="form-label") }}
+                                    {{ form.prescription(class="form-control", rows="4", placeholder="Medications prescribed with dosage and duration...") }}
+                                    {% if form.prescription.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.prescription.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- File Upload -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-paperclip me-2"></i>Attachments
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form.file_upload.label(class="form-label") }}
+                                    {{ form.file_upload(class="form-control") }}
+                                    {% if form.file_upload.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.file_upload.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Supported formats: PDF, JPG, PNG, DOC, DOCX (Max size: 16MB)
+                                    </small>
+                                </div>
+                                
+                                <div class="file-preview" id="filePreview" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-file me-2"></i>
+                                        <span id="fileName"></span>
+                                        <button type="button" class="btn-close float-end" onclick="clearFilePreview()"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vital Signs -->
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-heartbeat me-2"></i>Vital Signs
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ form.blood_pressure.label(class="form-label") }}
+                                    {{ form.blood_pressure(class="form-control", placeholder="e.g., 120/80") }}
+                                    {% if form.blood_pressure.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.blood_pressure.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.heart_rate.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.heart_rate(class="form-control", placeholder="e.g., 72") }}
+                                        <span class="input-group-text">bpm</span>
+                                    </div>
+                                    {% if form.heart_rate.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.heart_rate.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.temperature.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.temperature(class="form-control", placeholder="e.g., 98.6", step="0.1") }}
+                                        <span class="input-group-text">°F</span>
+                                    </div>
+                                    {% if form.temperature.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.temperature.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.weight.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.weight(class="form-control", placeholder="e.g., 150", step="0.1") }}
+                                        <span class="input-group-text">lbs</span>
+                                    </div>
+                                    {% if form.weight.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.weight.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.height.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.height(class="form-control", placeholder="e.g., 68", step="0.1") }}
+                                        <span class="input-group-text">inches</span>
+                                    </div>
+                                    {% if form.height.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.height.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- BMI Calculation -->
+                                <div class="alert alert-light" id="bmiAlert" style="display: none;">
+                                    <small class="text-muted">BMI: <span id="bmiValue"></span></small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-magic me-2"></i>Quick Actions
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addTemplate('routine_checkup')">
+                                        Routine Checkup Template
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addTemplate('follow_up')">
+                                        Follow-up Template
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addTemplate('emergency')">
+                                        Emergency Visit Template
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearForm()">
+                                        Clear All Fields
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('staff_patient_profile', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="saveDraft()">
+                                    <i class="fas fa-save me-2"></i>Save Draft
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Add Record
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// File upload preview
+document.getElementById('file_upload').addEventListener('change', function() {
+    const file = this.files[0];
+    const preview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    
+    if (file) {
+        fileName.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+});
+
+function clearFilePreview() {
+    document.getElementById('file_upload').value = '';
+    document.getElementById('filePreview').style.display = 'none';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// BMI Calculation
+function calculateBMI() {
+    const weight = parseFloat(document.getElementById('weight').value);
+    const height = parseFloat(document.getElementById('height').value);
+    
+    if (weight && height) {
+        const bmi = (weight / (height * height)) * 703; // Formula for lbs and inches
+        const bmiValue = document.getElementById('bmiValue');
+        const bmiAlert = document.getElementById('bmiAlert');
+        
+        bmiValue.textContent = bmi.toFixed(1);
+        bmiAlert.style.display = 'block';
+        
+        // Color code BMI
+        if (bmi < 18.5) {
+            bmiAlert.className = 'alert alert-info';
+            bmiValue.textContent += ' (Underweight)';
+        } else if (bmi < 25) {
+            bmiAlert.className = 'alert alert-success';
+            bmiValue.textContent += ' (Normal)';
+        } else if (bmi < 30) {
+            bmiAlert.className = 'alert alert-warning';
+            bmiValue.textContent += ' (Overweight)';
+        } else {
+            bmiAlert.className = 'alert alert-danger';
+            bmiValue.textContent += ' (Obese)';
+        }
+    } else {
+        document.getElementById('bmiAlert').style.display = 'none';
+    }
+}
+
+// Add event listeners for BMI calculation
+document.getElementById('weight').addEventListener('input', calculateBMI);
+document.getElementById('height').addEventListener('input', calculateBMI);
+
+// Templates
+function addTemplate(templateType) {
+    const templates = {
+        'routine_checkup': {
+            diagnosis: 'Routine checkup - No acute issues identified',
+            symptoms: 'Patient reports feeling well overall. No specific complaints.',
+            treatment: 'Continue current lifestyle practices. Regular exercise and balanced diet recommended.',
+            prescription: 'No new medications prescribed. Continue current medications as directed.'
+        },
+        'follow_up': {
+            diagnosis: 'Follow-up visit for ongoing condition',
+            symptoms: 'Patient reports improvement in symptoms since last visit.',
+            treatment: 'Continue current treatment plan with modifications as needed.',
+            prescription: 'Medication adjustments made based on patient response.'
+        },
+        'emergency': {
+            diagnosis: 'Emergency visit - Acute condition requiring immediate attention',
+            symptoms: 'Patient presented with acute symptoms requiring urgent care.',
+            treatment: 'Immediate stabilization and appropriate interventions provided.',
+            prescription: 'Emergency medications administered. Follow-up care scheduled.'
+        }
+    };
+    
+    if (templates[templateType]) {
+        const template = templates[templateType];
+        document.getElementById('diagnosis').value = template.diagnosis;
+        document.getElementById('symptoms').value = template.symptoms;
+        document.getElementById('treatment').value = template.treatment;
+        document.getElementById('prescription').value = template.prescription;
+        
+        showToast('Template applied successfully!', 'success');
+    }
+}
+
+function clearForm() {
+    if (confirm('Are you sure you want to clear all fields? This action cannot be undone.')) {
+        document.querySelector('form').reset();
+        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('bmiAlert').style.display = 'none';
+        showToast('Form cleared', 'info');
+    }
+}
+
+function saveDraft() {
+    const formData = {
+        diagnosis: document.getElementById('diagnosis').value,
+        symptoms: document.getElementById('symptoms').value,
+        treatment: document.getElementById('treatment').value,
+        prescription: document.getElementById('prescription').value,
+        blood_pressure: document.getElementById('blood_pressure').value,
+        heart_rate: document.getElementById('heart_rate').value,
+        temperature: document.getElementById('temperature').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        timestamp: new Date().toISOString()
+    };
+    
+    localStorage.setItem('medical_record_draft_{{ patient.id }}', JSON.stringify(formData));
+    showToast('Draft saved successfully!', 'success');
+}
+
+// Load draft on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const draft = localStorage.getItem('medical_record_draft_{{ patient.id }}');
+    if (draft) {
+        const draftData = JSON.parse(draft);
+        const draftAge = Date.now() - new Date(draftData.timestamp).getTime();
+        
+        // Only load draft if it's less than 2 hours old
+        if (draftAge < 7200000) {
+            if (confirm('You have a saved draft for this patient. Would you like to load it?')) {
+                Object.keys(draftData).forEach(key => {
+                    if (key !== 'timestamp') {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = draftData[key];
+                        }
+                    }
+                });
+                
+                // Recalculate BMI if weight and height are loaded
+                calculateBMI();
+                showToast('Draft loaded', 'info');
+            }
+        } else {
+            // Remove old draft
+            localStorage.removeItem('medical_record_draft_{{ patient.id }}');
+        }
+    }
+});
+
+// Clear draft on successful submission
+document.querySelector('form').addEventListener('submit', function() {
+    localStorage.removeItem('medical_record_draft_{{ patient.id }}');
+});
+
+// Auto-save draft every 2 minutes
+setInterval(function() {
+    const hasContent = document.getElementById('diagnosis').value.trim() || 
+                      document.getElementById('symptoms').value.trim() || 
+                      document.getElementById('treatment').value.trim() || 
+                      document.getElementById('prescription').value.trim();
+    
+    if (hasContent) {
+        saveDraft();
+    }
+}, 120000); // 2 minutes
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(event) {
+    const diagnosis = document.getElementById('diagnosis').value.trim();
+    const symptoms = document.getElementById('symptoms').value.trim();
+    const treatment = document.getElementById('treatment').value.trim();
+    
+    if (!diagnosis && !symptoms && !treatment) {
+        event.preventDefault();
+        alert('Please fill in at least one of the following fields: Diagnosis, Symptoms, or Treatment.');
+        return;
+    }
+    
+    // Confirm before submission
+    if (!confirm('Are you sure you want to add this medical record? This action cannot be undone.')) {
+        event.preventDefault();
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    // Ctrl/Cmd + S to save draft
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        saveDraft();
+    }
+    
+    // Ctrl/Cmd + Enter to submit form
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        document.querySelector('form').dispatchEvent(new Event('submit'));
+    }
+});
+</script>
+{% endblock %}

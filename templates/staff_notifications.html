@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Notifications - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 px-0">
+            <div class="bg-primary text-white min-vh-100 p-3">
+                <div class="text-center mb-4">
+                    <img src="https://via.placeholder.com/80" alt="Profile" class="rounded-circle mb-2" width="80" height="80">
+                    <div class="fw-bold">{{ current_user.full_name }}</div>
+                    <small class="text-light">{{ current_user.user_type.title() }}</small>
+                </div>
+                
+                <h5>Healthcare24/7</h5>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link text-white" href="{{ url_for('staff_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link text-white" href="#">
+                        <i class="fas fa-calendar me-2"></i>Calendar
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_appointments') }}">
+                        <i class="fas fa-calendar-check me-2"></i>Appointments
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_patients') }}">
+                        <i class="fas fa-users me-2"></i>Patients
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_messages') }}">
+                        <i class="fas fa-envelope me-2"></i>Messages
+                    </a>
+                    <a class="nav-link text-white active" href="{{ url_for('staff_notifications') }}">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_payment_info') }}">
+                        <i class="fas fa-credit-card me-2"></i>Payment Info
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_settings') }}">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                    <hr class="text-white">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Notifications</h2>
+                    <button class="btn btn-outline-primary" onclick="markAllAsRead()">
+                        Mark all as read
+                    </button>
+                </div>
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        {% if notifications %}
+                            {% for notification in notifications %}
+                            <div class="notification-item d-flex align-items-start p-3 border-bottom {% if not notification.is_read %}bg-light{% endif %}">
+                                <div class="me-3 mt-1">
+                                    {% if notification.notification_type == 'appointment' %}
+                                        <i class="fas fa-calendar-check text-primary"></i>
+                                    {% elif notification.notification_type == 'message' %}
+                                        <i class="fas fa-envelope text-info"></i>
+                                    {% elif notification.notification_type == 'payment' %}
+                                        <i class="fas fa-credit-card text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-bell text-secondary"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1 {% if not notification.is_read %}fw-bold{% endif %}">{{ notification.title }}</h6>
+                                            <p class="mb-1 text-muted">{{ notification.message }}</p>
+                                            <small class="text-muted">{{ notification.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                        </div>
+                                        <div class="ms-3">
+                                            {% if not notification.is_read %}
+                                                <a href="{{ url_for('mark_notification_read', notification_id=notification.id) }}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No notifications</h5>
+                                <p class="text-muted">You're all caught up! Notifications will appear here when you have updates.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function markAllAsRead() {
+    if (confirm('Mark all notifications as read?')) {
+        // In a real application, this would make an AJAX call
+        alert('All notifications marked as read');
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

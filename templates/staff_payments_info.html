@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Payment Info - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 px-0">
+            <div class="bg-primary text-white min-vh-100 p-3">
+                <div class="text-center mb-4">
+                    <img src="https://via.placeholder.com/80" alt="Profile" class="rounded-circle mb-2" width="80" height="80">
+                    <div class="fw-bold">{{ current_user.full_name }}</div>
+                    <small class="text-light">{{ current_user.user_type.title() }}</small>
+                </div>
+                
+                <h5>Healthcare24/7</h5>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link text-white" href="{{ url_for('staff_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link text-white" href="#">
+                        <i class="fas fa-calendar me-2"></i>Calendar
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_appointments') }}">
+                        <i class="fas fa-calendar-check me-2"></i>Appointments
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_patients') }}">
+                        <i class="fas fa-users me-2"></i>Patients
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_messages') }}">
+                        <i class="fas fa-envelope me-2"></i>Messages
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_notifications') }}">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </a>
+                    <a class="nav-link text-white active" href="{{ url_for('staff_payment_info') }}">
+                        <i class="fas fa-credit-card me-2"></i>Payment Info
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_settings') }}">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                    <hr class="text-white">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="p-4">
+                <h2 class="mb-4">Payment Information</h2>
+                
+                <!-- Monthly Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0 shadow-sm bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Total Collected</h6>
+                                        <h3 class="card-title mb-0">${{ "%.2f"|format(monthly_collected) }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0 shadow-sm bg-warning text-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Total Pending</h6>
+                                        <h3 class="card-title mb-0">${{ "%.2f"|format(monthly_pending) }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0 shadow-sm bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Insurance Claims</h6>
+                                        <h3 class="card-title mb-0">${{ "%.2f"|format((monthly_collected * 0.6)) }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-shield-alt fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Recent Payments -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Recent Payments</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if recent_payments %}
+                                    {% for payment in recent_payments %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div>
+                                            <h6 class="mb-1">{{ payment.patient.full_name }}</h6>
+                                            <small class="text-muted">{{ payment.reason }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="text-success fw-bold">${{ "%.2f"|format(payment.fee_amount) }}</div>
+                                            <small class="text-muted">{{ payment.updated_at.strftime('%b %d, %Y') }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No recent payments found.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Payments -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Pending Payments</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if pending_payments %}
+                                    {% for payment in pending_payments %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div>
+                                            <h6 class="mb-1">{{ payment.patient.full_name }}</h6>
+                                            <small class="text-muted">{{ payment.reason }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="text-warning fw-bold">${{ "%.2f"|format(payment.fee_amount) }}</div>
+                                            <small class="text-muted">{{ payment.appointment_date.strftime('%b %d, %Y') }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No pending payments found.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Methods Distribution -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Payment Methods Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <div class="p-3">
+                                            <div class="display-6 text-primary">💳</div>
+                                            <h6 class="mt-2">Credit Card</h6>
+                                            <p class="text-muted">60%</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3">
+                                            <div class="display-6 text-info">🏥</div>
+                                            <h6 class="mt-2">Insurance</h6>
+                                            <p class="text-muted">35%</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3">
+                                            <div class="display-6 text-success">💵</div>
+                                            <h6 class="mt-2">Cash</h6>
+                                            <p class="text-muted">5%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

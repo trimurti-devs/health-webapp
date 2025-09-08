@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Welcome to Healthcare24/7</h1>
+    <p>Your health, our priority. Access quality healthcare services 24/7.</p>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <a href="{{ url_for('patient_dashboard') }}" class="btn btn-primary w-100 mb-3">Patient Dashboard</a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('staff_dashboard') }}" class="btn btn-secondary w-100 mb-3">Staff Dashboard</a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('find_doctors') }}" class="btn btn-info w-100 mb-3">Find Doctors</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

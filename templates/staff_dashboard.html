@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Dashboard - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 px-0">
+            <div class="bg-primary text-white min-vh-100 p-3">
+                <div class="text-center mb-4">
+                    <img src="https://via.placeholder.com/80" alt="Profile" class="rounded-circle mb-2" width="80" height="80">
+                    <div class="fw-bold">{{ current_user.full_name }}</div>
+                    <small class="text-light">{{ current_user.user_type.title() }}</small>
+                </div>
+                
+                <h5>Healthcare24/7</h5>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link text-white active" href="{{ url_for('staff_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_calendar') }}">
+                        <i class="fas fa-calendar me-2"></i>Calendar
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_appointments') }}">
+                        <i class="fas fa-calendar-check me-2"></i>Appointments
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_patients') }}">
+                        <i class="fas fa-users me-2"></i>Patients
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_messages') }}">
+                        <i class="fas fa-envelope me-2"></i>Messages
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_notifications') }}">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_payment_info') }}">
+                        <i class="fas fa-credit-card me-2"></i>Payment Info
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_settings') }}">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                    <hr class="text-white">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="p-4">
+                <div class="row mb-4">
+                    <div class="col">
+                        <h1>Dashboard</h1>
+                        <p class="text-muted">Welcome back, {{ current_user.first_name }}!</p>
+                    </div>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 shadow-sm bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Today's Appointments</h6>
+                                        <h3 class="card-title mb-0">{{ stats.todays_appointments or 0 }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-calendar-day fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 shadow-sm bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Total Patients</h6>
+                                        <h3 class="card-title mb-0">{{ stats.total_patients or 0 }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 shadow-sm bg-warning text-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Unread Messages</h6>
+                                        <h3 class="card-title mb-0">{{ stats.unread_messages or 0 }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-envelope fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0 shadow-sm bg-danger text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-subtitle mb-2">Pending Payments</h6>
+                                        <h3 class="card-title mb-0">${{ "%.2f"|format(stats.pending_payments or 0) }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-credit-card fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Today's Appointments -->
+                    <div class="col-md-8 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Today's Appointments</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if appointments %}
+                                    {% for appointment in appointments %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div>
+                                            <h6 class="mb-1">{{ appointment.patient.full_name }}</h6>
+                                            <small class="text-muted">{{ appointment.reason }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="text-muted small">{{ appointment.appointment_date.strftime('%I:%M %p') }}</div>
+                                            <span class="badge bg-{{ 'success' if appointment.status == 'confirmed' else 'warning' }}">{{ appointment.status.title() }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No appointments for today.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Messages -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0">
+                                <h5 class="mb-0">Recent Messages</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if messages %}
+                                    {% for message in messages %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 text-truncate">{{ message.sender.full_name }}</h6>
+                                            <small class="text-muted">{{ message.subject|truncate(30) }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">{{ message.created_at.strftime('%b %d') }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No messages found.</p>
+                                {% endif %}
+                                <div class="text-center mt-3">
+                                    <a href="{{ url_for('staff_messages') }}" class="btn btn-primary btn-sm">View All</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

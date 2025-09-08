@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Send Message - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('staff_messages' if current_user.is_staff() else 'patient_dashboard') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>Send Message
+                </h2>
+            </div>
+            
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Compose Message</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.recipient_id.label(class="form-label") }}
+                            {{ form.recipient_id(class="form-select") }}
+                            {% if form.recipient_id.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.recipient_id.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.subject.label(class="form-label") }}
+                            {{ form.subject(class="form-control", placeholder="Enter message subject") }}
+                            {% if form.subject.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.subject.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows="8", placeholder="Enter your message here...") }}
+                            {% if form.content.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.content.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="requestResponse">
+                            <label class="form-check-label" for="requestResponse">
+                                Request a response
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('staff_messages' if current_user.is_staff() else 'patient_dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="saveDraft()">
+                                    <i class="fas fa-save me-2"></i>Save Draft
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Quick Templates -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Quick Templates
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if current_user.user_type == 'patient' %}
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('appointment_request')">
+                                Appointment Request
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('prescription_request')">
+                                Prescription Request
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('test_results')">
+                                Test Results Inquiry
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('general_inquiry')">
+                                General Inquiry
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('follow_up')">
+                                Follow-up Required
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('test_results_ready')">
+                                Test Results Ready
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('appointment_reminder')">
+                                Appointment Reminder
+                            </button>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100" onclick="useTemplate('medication_instruction')">
+                                Medication Instructions
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function useTemplate(templateType) {
+    const subjectField = document.getElementById('subject');
+    const contentField = document.getElementById('content');
+    
+    const templates = {
+        // Patient templates
+        'appointment_request': {
+            subject: 'Appointment Request',
+            content: 'Dear Doctor,\n\nI would like to schedule an appointment for:\n\nReason: [Please specify your concern]\nPreferred Date: [Your preferred date]\nPreferred Time: [Your preferred time]\n\nThank you for your time.\n\nBest regards,\n{{ current_user.full_name }}'
+        },
+        'prescription_request': {
+            subject: 'Prescription Refill Request',
+            content: 'Dear Doctor,\n\nI would like to request a refill for my prescription:\n\nMedication Name: [Medication name]\nDosage: [Dosage]\nLast Prescribed: [Date]\n\nPlease let me know if you need any additional information.\n\nThank you,\n{{ current_user.full_name }}'
+        },
+        'test_results': {
+            subject: 'Test Results Inquiry',
+            content: 'Dear Doctor,\n\nI had some tests done recently and would like to inquire about the results:\n\nTest Date: [Date of test]\nTest Type: [Type of test]\n\nCould you please let me know when the results will be available?\n\nThank you,\n{{ current_user.full_name }}'
+        },
+        'general_inquiry': {
+            subject: 'General Health Inquiry',
+            content: 'Dear Doctor,\n\nI have a general health question regarding:\n\n[Please describe your concern or question]\n\nI would appreciate your guidance on this matter.\n\nThank you for your time,\n{{ current_user.full_name }}'
+        },
+        
+        // Staff templates
+        'follow_up': {
+            subject: 'Follow-up Appointment Required',
+            content: 'Dear [Patient Name],\n\nBased on your recent visit, we recommend scheduling a follow-up appointment to:\n\n- Monitor your progress\n- Review test results\n- Adjust treatment if necessary\n\nPlease contact us to schedule your next appointment.\n\nBest regards,\nDr. {{ current_user.full_name }}'
+        },
+        'test_results_ready': {
+            subject: 'Your Test Results Are Ready',
+            content: 'Dear [Patient Name],\n\nYour recent test results are now available. Please log into your patient portal to view them, or schedule an appointment to discuss the results.\n\nIf you have any immediate concerns, please don\'t hesitate to contact us.\n\nBest regards,\nDr. {{ current_user.full_name }}'
+        },
+        'appointment_reminder': {
+            subject: 'Upcoming Appointment Reminder',
+            content: 'Dear [Patient Name],\n\nThis is a reminder about your upcoming appointment:\n\nDate: [Date]\nTime: [Time]\nPurpose: [Reason for visit]\n\nPlease arrive 15 minutes early for check-in. If you need to reschedule, please contact us at least 24 hours in advance.\n\nBest regards,\nDr. {{ current_user.full_name }}'
+        },
+        'medication_instruction': {
+            subject: 'Medication Instructions',
+            content: 'Dear [Patient Name],\n\nPlease find below the instructions for your prescribed medication:\n\nMedication: [Medication name]\nDosage: [Dosage instructions]\nFrequency: [How often to take]\nDuration: [How long to take]\n\nImportant notes:\n- [Any special instructions]\n- [Side effects to watch for]\n\nPlease contact us if you have any questions.\n\nBest regards,\nDr. {{ current_user.full_name }}'
+        }
+    };
+    
+    if (templates[templateType]) {
+        subjectField.value = templates[templateType].subject;
+        contentField.value = templates[templateType].content;
+        
+        // Show success message
+        showToast('Template applied successfully!', 'success');
+    }
+}
+
+function saveDraft() {
+    const subject = document.getElementById('subject').value;
+    const content = document.getElementById('content').value;
+    
+    if (!subject && !content) {
+        showToast('Nothing to save!', 'warning');
+        return;
+    }
+    
+    // In a real application, this would save to the server
+    localStorage.setItem('message_draft', JSON.stringify({
+        subject: subject,
+        content: content,
+        timestamp: new Date().toISOString()
+    }));
+    
+    showToast('Draft saved successfully!', 'success');
+}
+
+// Load draft on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const draft = localStorage.getItem('message_draft');
+    if (draft) {
+        const draftData = JSON.parse(draft);
+        const draftAge = Date.now() - new Date(draftData.timestamp).getTime();
+        
+        // Only load draft if it's less than 1 hour old
+        if (draftAge < 3600000) {
+            if (confirm('You have a saved draft. Would you like to load it?')) {
+                document.getElementById('subject').value = draftData.subject;
+                document.getElementById('content').value = draftData.content;
+            }
+        } else {
+            // Remove old draft
+            localStorage.removeItem('message_draft');
+        }
+    }
+});
+
+// Clear draft on successful send
+document.querySelector('form').addEventListener('submit', function() {
+    localStorage.removeItem('message_draft');
+});
+
+// Character counter for content
+document.getElementById('content').addEventListener('input', function() {
+    const maxLength = 2000;
+    const currentLength = this.value.length;
+    
+    // Remove existing counter
+    const existingCounter = this.parentNode.querySelector('.char-counter');
+    if (existingCounter) {
+        existingCounter.remove();
+    }
+    
+    // Add new counter
+    const counter = document.createElement('small');
+    counter.className = 'char-counter text-muted';
+    counter.textContent = `${currentLength}/${maxLength} characters`;
+    
+    if (currentLength > maxLength * 0.9) {
+        counter.className = 'char-counter text-warning';
+    }
+    if (currentLength > maxLength) {
+        counter.className = 'char-counter text-danger';
+    }
+    
+    this.parentNode.appendChild(counter);
+});
+
+// Auto-save functionality
+let autoSaveTimeout;
+document.querySelectorAll('#subject, #content').forEach(field => {
+    field.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(saveDraft, 30000); // Auto-save after 30 seconds of inactivity
+    });
+});
+</script>
+{% endblock %}

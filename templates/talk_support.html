@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Talk Support - Healthcare24/7{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="header">
+    <div class="container header-top">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>Healthcare24/7</span>
+        </div>
+        <div class="location-select">
+            <label for="location">Select Location</label>
+            <select id="location" name="location" class="form-select">
+                <option>Howrah</option>
+                <option>Delhi</option>
+                <option>Bengaluru</option>
+                <option>Mumbai</option>
+            </select>
+        </div>
+        <div class="search-bar">
+            <form action="{{ url_for('search') }}" method="GET" class="d-flex">
+                <input type="text" name="query" placeholder="Search Doctors, Specialities, Conditions etc." class="form-control">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        {% if current_user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    {{ current_user.full_name }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('patient_dashboard') if not current_user.is_staff() else url_for('staff_dashboard') }}">Dashboard</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </div>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Login</a>
+        {% endif %}
+    </div>
+    
+    <nav class="nav-bar">
+        <div class="container">
+            <ul class="nav justify-content-center">
+                <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="{{ url_for('buy_medicines') }}" class="nav-link">Buy Medicines</a></li>
+                <li class="nav-item"><a href="{{ url_for('book_appointment') }}" class="nav-link">Find Doctors</a></li>
+                <li class="nav-item"><a href="{{ url_for('lab_tests') }}" class="nav-link">Lab Tests</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Health Records</a></li>
+                <li class="nav-item"><a href="{{ url_for('talk_support') }}" class="nav-link active">Talk Support</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<main class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-5">
+                <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                <h2>AI Health Assistant</h2>
+                <p class="text-muted">Get instant answers to your health questions from our AI-powered assistant</p>
+            </div>
+            
+            <!-- Chat Interface -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-robot me-2"></i>
+                        <span>HealthBot Assistant</span>
+                        <span class="badge bg-success ms-auto">Online</span>
+                    </div>
+                </div>
+                
+                <div class="card-body" style="height: 400px; overflow-y: auto;" id="chatMessages">
+                    <!-- Welcome Message -->
+                    <div class="d-flex mb-3">
+                        <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-0">Hello! I'm your AI health assistant. I can help answer general health questions, provide information about symptoms, and guide you to appropriate care. How can I help you today?</p>
+                            </div>
+                            <small class="text-muted">Just now</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <form id="chatForm" class="d-flex">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="attachFile()">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <input type="text" id="messageInput" class="form-control me-2" placeholder="Ask anything about your health..." required>
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="voiceInput()">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Suggested Questions -->
+            <div class="mt-4">
+                <h5>Suggested Questions</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="askQuestion('What are the symptoms of COVID-19?')">
+                            What are the symptoms of COVID-19?
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="askQuestion('How to manage high blood pressure?')">
+                            How to manage high blood pressure?
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="askQuestion('When should I see a doctor for a headache?')">
+                            When should I see a doctor for a headache?
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="askQuestion('What are healthy eating habits?')">
+                            What are healthy eating habits?
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Disclaimer -->
+            <div class="alert alert-warning mt-4">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Medical Disclaimer:</strong> This AI assistant provides general health information only. For medical emergencies, call emergency services immediately. Always consult with healthcare professionals for personalized medical advice.
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer py-4 bg-light mt-5">
+    <div class="container text-center">
+        <p>&copy; 2025 Healthcare24/7. All rights reserved.</p>
+        <p>Providing quality healthcare services with compassion and excellence.</p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let chatMessages = document.getElementById('chatMessages');
+
+document.getElementById('chatForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (message) {
+        addUserMessage(message);
+        messageInput.value = '';
+        
+        // Simulate AI response after a delay
+        setTimeout(() => {
+            addBotResponse(message);
+        }, 1000);
+    }
+});
+
+function addUserMessage(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'd-flex mb-3 justify-content-end';
+    messageDiv.innerHTML = `
+        <div class="flex-grow-1 text-end me-2">
+            <div class="bg-primary text-white p-3 rounded" style="display: inline-block; max-width: 80%;">
+                <p class="mb-0">${message}</p>
+            </div>
+            <small class="text-muted">Just now</small>
+        </div>
+        <div class="avatar-circle bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.8rem;">
+            ${getCurrentUserInitials()}
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addBotResponse(userMessage) {
+    const responses = {
+        'covid': 'Common COVID-19 symptoms include fever, cough, fatigue, body aches, sore throat, and loss of taste or smell. If you experience severe symptoms like difficulty breathing, seek immediate medical attention.',
+        'blood pressure': 'To manage high blood pressure: 1) Maintain a healthy diet low in sodium, 2) Exercise regularly, 3) Limit alcohol and quit smoking, 4) Manage stress, 5) Take prescribed medications as directed. Regular monitoring is important.',
+        'headache': 'See a doctor for headaches if they are severe, sudden, accompanied by fever, vision changes, or neurological symptoms, or if they worsen over time. Persistent headaches that interfere with daily life should also be evaluated.',
+        'eating': 'Healthy eating habits include: eating plenty of fruits and vegetables, choosing whole grains, including lean proteins, limiting processed foods and added sugars, staying hydrated, and eating regular, balanced meals.'
+    };
+    
+    let response = "Thank you for your question. While I can provide general health information, I recommend consulting with a healthcare professional for personalized advice. Is there anything specific about your symptoms or health concerns you'd like to discuss?";
+    
+    // Simple keyword matching for demo purposes
+    const lowerMessage = userMessage.toLowerCase();
+    for (let keyword in responses) {
+        if (lowerMessage.includes(keyword)) {
+            response = responses[keyword];
+            break;
+        }
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'd-flex mb-3';
+    messageDiv.innerHTML = `
+        <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="bg-light p-3 rounded">
+                <p class="mb-0">${response}</p>
+            </div>
+            <small class="text-muted">Just now</small>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function askQuestion(question) {
+    document.getElementById('messageInput').value = question;
+    document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+}
+
+function attachFile() {
+    alert('File attachment feature coming soon!');
+}
+
+function voiceInput() {
+    if ('webkitSpeechRecognition' in window) {
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.onresult = function(event) {
+            document.getElementById('messageInput').value = event.results[0][0].transcript;
+        };
+        recognition.start();
+    } else {
+        alert('Speech recognition not supported in this browser.');
+    }
+}
+
+function getCurrentUserInitials() {
+    {% if current_user.is_authenticated %}
+        return '{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}';
+    {% else %}
+        return 'U';
+    {% endif %}
+}
+</script>
+{% endblock %}

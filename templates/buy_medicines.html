@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Buy Medicines - Healthcare24/7{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="header">
+    <div class="container header-top">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>Healthcare24/7</span>
+        </div>
+        <div class="location-select">
+            <label for="location">Select Location</label>
+            <select id="location" name="location" class="form-select">
+                <option>Howrah</option>
+                <option>Delhi</option>
+                <option>Bengaluru</option>
+                <option>Mumbai</option>
+            </select>
+        </div>
+        <div class="search-bar">
+            <form method="GET" class="d-flex">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search medicines..." class="form-control">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        {% if current_user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    {{ current_user.full_name }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('patient_dashboard') if not current_user.is_staff() else url_for('staff_dashboard') }}">Dashboard</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </div>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Login</a>
+        {% endif %}
+    </div>
+    
+    <nav class="nav-bar">
+        <div class="container">
+            <ul class="nav justify-content-center">
+                <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="{{ url_for('buy_medicines') }}" class="nav-link active">Buy Medicines</a></li>
+                <li class="nav-item"><a href="{{ url_for('book_appointment') }}" class="nav-link">Find Doctors</a></li>
+                <li class="nav-item"><a href="{{ url_for('lab_tests') }}" class="nav-link">Lab Tests</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Health Records</a></li>
+                <li class="nav-item"><a href="{{ url_for('talk_support') }}" class="nav-link">Talk Support</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<main class="container my-5">
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" class="d-flex">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search medicines by name..." class="form-control me-2">
+                <select name="category" class="form-select me-2" style="width: auto;">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}" {% if category == current_category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('view_cart') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-shopping-cart me-2"></i>Cart
+                    <span class="badge bg-secondary" id="cart-count">{{ session.cart|length if session.cart else 0 }}</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="quick-links d-flex gap-3 flex-wrap">
+                <div class="quick-link-item flex-fill text-center p-3 bg-light rounded">
+                    <i class="fas fa-pills fa-2x text-primary mb-2 d-block"></i>
+                    <div>Pain Relief</div>
+                </div>
+                <div class="quick-link-item flex-fill text-center p-3 bg-light rounded">
+                    <i class="fas fa-thermometer fa-2x text-primary mb-2 d-block"></i>
+                    <div>Cold & Flu</div>
+                </div>
+                <div class="quick-link-item flex-fill text-center p-3 bg-light rounded">
+                    <i class="fas fa-heart fa-2x text-primary mb-2 d-block"></i>
+                    <div>Heart Care</div>
+                </div>
+                <div class="quick-link-item flex-fill text-center p-3 bg-light rounded">
+                    <i class="fas fa-eye fa-2x text-primary mb-2 d-block"></i>
+                    <div>Eye Care</div>
+                </div>
+                <div class="quick-link-item flex-fill text-center p-3 bg-light rounded">
+                    <i class="fas fa-baby fa-2x text-primary mb-2 d-block"></i>
+                    <div>Baby Care</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Medicines Grid -->
+    <div class="row">
+        {% if medicines.items %}
+            {% for medicine in medicines.items %}
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-capsules fa-3x text-primary"></i>
+                        </div>
+                        <h6 class="card-title">{{ medicine.name }}</h6>
+                        <p class="card-text small text-muted">{{ medicine.description|truncate(80) }}</p>
+                        
+                        <div class="mb-2">
+                            {% if medicine.manufacturer %}
+                                <small class="text-muted">{{ medicine.manufacturer }}</small><br>
+                            {% endif %}
+                            {% if medicine.strength %}
+                                <small class="text-muted">{{ medicine.strength }}</small><br>
+                            {% endif %}
+                            {% if medicine.dosage_form %}
+                                <span class="badge bg-light text-dark">{{ medicine.dosage_form.title() }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h6 text-primary mb-0">${{ "%.2f"|format(medicine.price) }}</span>
+                            <small class="text-muted">Stock: {{ medicine.stock_quantity }}</small>
+                        </div>
+                        
+                        {% if medicine.is_prescription_required %}
+                            <div class="mb-2">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-prescription-bottle-alt me-1"></i>Prescription Required
+                                </span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if current_user.is_authenticated and medicine.stock_quantity > 0 %}
+                            <a href="{{ url_for('add_to_cart', medicine_id=medicine.id) }}" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                            </a>
+                        {% elif not current_user.is_authenticated %}
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm w-100">
+                                Login to Order
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary btn-sm w-100" disabled>
+                                Out of Stock
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No medicines found</h5>
+                    {% if search_query %}
+                        <p class="text-muted">No medicines found matching "{{ search_query }}"</p>
+                        <a href="{{ url_for('buy_medicines') }}" class="btn btn-primary">Browse All Medicines</a>
+                    {% else %}
+                        <p class="text-muted">Medicines will be available soon.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if medicines.pages > 1 %}
+    <nav aria-label="Medicines pagination">
+        <ul class="pagination justify-content-center">
+            {% if medicines.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('buy_medicines', page=medicines.prev_num, search=search_query, category=current_category) }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            {% for page_num in medicines.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != medicines.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('buy_medicines', page=page_num, search=search_query, category=current_category) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if medicines.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('buy_medicines', page=medicines.next_num, search=search_query, category=current_category) }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</main>
+
+<footer class="footer py-4 bg-light mt-5">
+    <div class="container text-center">
+        <p>&copy; 2025 Healthcare24/7. All rights reserved.</p>
+        <p>Providing quality healthcare services with compassion and excellence.</p>
+    </div>
+</footer>
+{% endblock %}

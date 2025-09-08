@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Settings - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 px-0">
+            <div class="bg-primary text-white min-vh-100 p-3">
+                <div class="text-center mb-4">
+                    <img src="https://via.placeholder.com/80" alt="Profile" class="rounded-circle mb-2" width="80" height="80">
+                    <div class="fw-bold">{{ current_user.full_name }}</div>
+                    <small class="text-light">{{ current_user.user_type.title() }}</small>
+                </div>
+                
+                <h5>Healthcare24/7</h5>
+                
+                <nav class="nav flex-column">
+                    <a class="nav-link text-white" href="{{ url_for('staff_dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a class="nav-link text-white" href="#">
+                        <i class="fas fa-calendar me-2"></i>Calendar
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_appointments') }}">
+                        <i class="fas fa-calendar-check me-2"></i>Appointments
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_patients') }}">
+                        <i class="fas fa-users me-2"></i>Patients
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_messages') }}">
+                        <i class="fas fa-envelope me-2"></i>Messages
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_notifications') }}">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </a>
+                    <a class="nav-link text-white" href="{{ url_for('staff_payment_info') }}">
+                        <i class="fas fa-credit-card me-2"></i>Payment Info
+                    </a>
+                    <a class="nav-link text-white active" href="{{ url_for('staff_settings') }}">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                    <hr class="text-white">
+                    <a class="nav-link text-danger" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="p-4">
+                <h2 class="mb-4">Settings</h2>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Profile Information -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">Profile Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.first_name.label(class="form-label") }}
+                                    {{ form.first_name(class="form-control") }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.first_name.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.last_name.label(class="form-label") }}
+                                    {{ form.last_name(class="form-control") }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.last_name.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.email.label(class="form-label") }}
+                                    {{ form.email(class="form-control") }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.email.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.phone.label(class="form-label") }}
+                                    {{ form.phone(class="form-control") }}
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.phone.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if current_user.is_staff() %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.specialty.label(class="form-label") }}
+                                    {{ form.specialty(class="form-control") }}
+                                    {% if form.specialty.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.specialty.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.license_number.label(class="form-label") }}
+                                    {{ form.license_number(class="form-control") }}
+                                    {% if form.license_number.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.license_number.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.department.label(class="form-label") }}
+                                {{ form.department(class="form-control") }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.department.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.date_of_birth.label(class="form-label") }}
+                                    {{ form.date_of_birth(class="form-control") }}
+                                    {% if form.date_of_birth.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.date_of_birth.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.gender.label(class="form-label") }}
+                                    {{ form.gender(class="form-control") }}
+                                    {% if form.gender.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.gender.errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.address.label(class="form-label") }}
+                                {{ form.address(class="form-control", rows="3") }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.address.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.profile_picture.label(class="form-label") }}
+                                {{ form.profile_picture(class="form-control") }}
+                                {% if current_user.profile_picture %}
+                                    <img src="{{ url_for('uploaded_file', filename=current_user.profile_picture) }}" alt="Profile Picture" class="img-thumbnail mt-2" style="max-width: 150px;">
+                                {% endif %}
+                                {% if form.profile_picture.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.profile_picture.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">Notifications</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                <label class="form-check-label" for="emailNotifications">
+                                    Email notifications
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="smsNotifications" checked>
+                                <label class="form-check-label" for="smsNotifications">
+                                    SMS notifications
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="appointmentReminders" checked>
+                                <label class="form-check-label" for="appointmentReminders">
+                                    Appointment reminders
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">Security</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-3">
+                                <a href="#" class="btn btn-outline-primary">Change Password</a>
+                                <a href="#" class="btn btn-outline-primary">Two-Factor Authentication</a>
+                                <a href="#" class="btn btn-outline-primary">Session Management</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('logout') }}" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i>Log Out
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

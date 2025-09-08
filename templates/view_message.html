@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}View Message - Healthcare24/7{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('staff_messages' if current_user.is_staff() else 'patient_dashboard') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h2 class="mb-0">
+                    <i class="fas fa-envelope-open me-2"></i>Message
+                </h2>
+            </div>
+            
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">{{ message.subject }}</h5>
+                            <small class="text-light">
+                                From: {{ message.sender.full_name }} ({{ message.sender.user_type.title() }})
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-light d-block">{{ message.created_at.strftime('%B %d, %Y') }}</small>
+                            <small class="text-light">{{ message.created_at.strftime('%I:%M %p') }}</small>
+                            {% if not message.is_read %}
+                                <span class="badge bg-warning text-dark ms-2">New</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Sender Information -->
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                            {{ message.sender.first_name[0] }}{{ message.sender.last_name[0] }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ message.sender.full_name }}</h6>
+                            <p class="text-muted small mb-1">{{ message.sender.user_type.title() }}</p>
+                            {% if message.sender.user_type == 'doctor' and message.sender.specialty %}
+                                <p class="text-muted small mb-0">{{ message.sender.specialty }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            {% if message.sender.id != current_user.id %}
+                                <a href="{{ url_for('send_message') }}?recipient={{ message.sender.id }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-reply me-1"></i>Reply
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Message Content -->
+                    <div class="message-content">
+                        {{ message.content|replace('\n', '<br>\n')|safe }}
+                    </div>
+                    
+                    <!-- Message Status -->
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if message.is_read and message.read_at %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-check-double text-primary me-1"></i>
+                                        Read on {{ message.read_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-check text-secondary me-1"></i>
+                                        Delivered
+                                    </small>
+                                {% endif %}
+                            </div>
+                            <div class="message-actions">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if message.sender.id != current_user.id %}
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('send_message') }}?recipient={{ message.sender.id }}&subject=Re: {{ message.subject }}">
+                                                    <i class="fas fa-reply me-2"></i>Reply
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('send_message') }}?recipient={{ message.sender.id }}&subject=Fwd: {{ message.subject }}">
+                                                    <i class="fas fa-share me-2"></i>Forward
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                        {% endif %}
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="printMessage()">
+                                                <i class="fas fa-print me-2"></i>Print
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" onclick="deleteMessage({{ message.id }})">
+                                                <i class="fas fa-trash me-2"></i>Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Reply -->
+            {% if message.sender.id != current_user.id %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-reply me-2"></i>Quick Reply
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="quickReplyForm">
+                        <div class="mb-3">
+                            <textarea class="form-control" id="quickReplyContent" rows="4" placeholder="Type your reply here..." required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="markUrgent">
+                                <label class="form-check-label small text-muted" for="markUrgent">
+                                    Mark as urgent
+                                </label>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary me-2" onclick="saveDraft()">
+                                    <i class="fas fa-save me-1"></i>Save Draft
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane me-1"></i>Send Reply
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Related Messages -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Message Thread
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="message-thread">
+                        <!-- Current message is highlighted -->
+                        <div class="thread-item current">
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                    {{ message.sender.first_name[0] }}{{ message.sender.last_name[0] }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-1">{{ message.subject }}</h6>
+                                        <small class="text-muted">{{ message.created_at.strftime('%b %d') }}</small>
+                                    </div>
+                                    <p class="text-muted small mb-0">{{ message.content|truncate(100) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Placeholder for related messages -->
+                        <div class="text-center py-3">
+                            <small class="text-muted">This is the start of your conversation with {{ message.sender.full_name }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Quick reply form submission
+document.getElementById('quickReplyForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    
+    const content = document.getElementById('quickReplyContent').value.trim();
+    const isUrgent = document.getElementById('markUrgent').checked;
+    
+    if (!content) {
+        alert('Please enter a reply message.');
+        return;
+    }
+    
+    // Show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    submitButton.disabled = true;
+    
+    // Simulate sending (in real app, this would be an AJAX call)
+    setTimeout(() => {
+        showToast('Reply sent successfully!', 'success');
+        
+        // Clear the form
+        document.getElementById('quickReplyContent').value = '';
+        document.getElementById('markUrgent').checked = false;
+        
+        // Reset button
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+        
+        // In a real app, you might redirect or update the thread
+    }, 1500);
+});
+
+function printMessage() {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    const messageContent = document.querySelector('.message-content').innerHTML;
+    const subject = '{{ message.subject }}';
+    const sender = '{{ message.sender.full_name }}';
+    const date = '{{ message.created_at.strftime("%B %d, %Y at %I:%M %p") }}';
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Message: ${subject}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                    .header { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+                    .content { line-height: 1.6; }
+                    .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 0.9rem; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>${subject}</h2>
+                    <p><strong>From:</strong> ${sender}</p>
+                    <p><strong>Date:</strong> ${date}</p>
+                </div>
+                <div class="content">
+                    ${messageContent}
+                </div>
+                <div class="footer">
+                    <p>This message was printed from Healthcare24/7 on ${new Date().toLocaleDateString()}</p>
+                </div>
+            </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function deleteMessage(messageId) {
+    if (confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+        // In a real application, this would make an AJAX call to delete the message
+        showToast('Message deleted successfully.', 'info');
+        
+        // Redirect back to messages list
+        setTimeout(() => {
+            window.location.href = '{{ url_for("staff_messages" if current_user.is_staff() else "patient_dashboard") }}';
+        }, 1500);
+    }
+}
+
+function saveDraft() {
+    const content = document.getElementById('quickReplyContent').value.trim();
+    
+    if (!content) {
+        showToast('Nothing to save!', 'warning');
+        return;
+    }
+    
+    // Save to localStorage (in real app, this would save to server)
+    localStorage.setItem('reply_draft_{{ message.id }}', JSON.stringify({
+        content: content,
+        timestamp: new Date().toISOString()
+    }));
+    
+    showToast('Draft saved successfully!', 'success');
+}
+
+// Load draft on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const draft = localStorage.getItem('reply_draft_{{ message.id }}');
+    if (draft) {
+        const draftData = JSON.parse(draft);
+        const draftAge = Date.now() - new Date(draftData.timestamp).getTime();
+        
+        // Only load draft if it's less than 1 hour old
+        if (draftAge < 3600000) {
+            document.getElementById('quickReplyContent').value = draftData.content;
+            showToast('Draft loaded', 'info');
+        } else {
+            // Remove old draft
+            localStorage.removeItem('reply_draft_{{ message.id }}');
+        }
+    }
+});
+
+// Auto-save draft
+let autoSaveTimeout;
+document.getElementById('quickReplyContent').addEventListener('input', function() {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(saveDraft, 30000); // Auto-save after 30 seconds
+});
+
+// Clear draft on successful send
+document.getElementById('quickReplyForm').addEventListener('submit', function() {
+    localStorage.removeItem('reply_draft_{{ message.id }}');
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    // Ctrl/Cmd + Enter to send reply
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        const replyForm = document.getElementById('quickReplyForm');
+        if (replyForm && document.getElementById('quickReplyContent').value.trim()) {
+            replyForm.dispatchEvent(new Event('submit'));
+        }
+    }
+    
+    // Escape to go back
+    if (event.key === 'Escape') {
+        window.history.back();
+    }
+});
+</script>
+
+<style>
+.message-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.thread-item {
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.thread-item.current {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.avatar-circle {
+    flex-shrink: 0;
+}
+
+@media print {
+    .card-header,
+    .message-actions,
+    .card:not(.message-card) {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

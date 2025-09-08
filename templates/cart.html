@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Healthcare24/7{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<header class="header">
+    <div class="container header-top">
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <span>Healthcare24/7</span>
+        </div>
+        <div class="location-select">
+            <label for="location">Select Location</label>
+            <select id="location" name="location" class="form-select">
+                <option>Howrah</option>
+                <option>Delhi</option>
+                <option>Bengaluru</option>
+                <option>Mumbai</option>
+            </select>
+        </div>
+        <div class="search-bar">
+            <form method="GET" action="{{ url_for('buy_medicines') }}" class="d-flex">
+                <input type="text" name="search" placeholder="Search medicines..." class="form-control">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                {{ current_user.full_name }}
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('patient_dashboard') }}">Dashboard</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <nav class="nav-bar">
+        <div class="container">
+            <ul class="nav justify-content-center">
+                <li class="nav-item"><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="{{ url_for('buy_medicines') }}" class="nav-link active">Buy Medicines</a></li>
+                <li class="nav-item"><a href="{{ url_for('book_appointment') }}" class="nav-link">Find Doctors</a></li>
+                <li class="nav-item"><a href="{{ url_for('lab_tests') }}" class="nav-link">Lab Tests</a></li>
+                <li class="nav-item"><a href="#" class="nav-link">Health Records</a></li>
+                <li class="nav-item"><a href="{{ url_for('talk_support') }}" class="nav-link">Talk Support</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<main class="container my-5">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="mb-4">
+                <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
+            </h2>
+            
+            {% if cart %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        {% for item_id, item in cart.items() %}
+                        <div class="cart-item d-flex align-items-center py-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="me-3">
+                                <i class="fas fa-pills fa-2x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ item.name }}</h6>
+                                <p class="text-muted small mb-0">${{ "%.2f"|format(item.price) }} each</p>
+                            </div>
+                            <div class="quantity-controls d-flex align-items-center me-3">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="updateQuantity('{{ item_id }}', -1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="mx-3" id="quantity-{{ item_id }}">{{ item.quantity }}</span>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="updateQuantity('{{ item_id }}', 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="item-total me-3">
+                                <strong id="total-{{ item_id }}">${{ "%.2f"|format(item.price * item.quantity) }}</strong>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-danger btn-sm" onclick="removeFromCart('{{ item_id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Your cart is empty</h5>
+                    <p class="text-muted">Add some medicines to your cart to continue shopping.</p>
+                    <a href="{{ url_for('buy_medicines') }}" class="btn btn-primary">
+                        <i class="fas fa-pills me-2"></i>Browse Medicines
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if cart %}
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">${{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Fee:</span>
+                        <span>$5.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax:</span>
+                        <span id="tax">${{ "%.2f"|format(total * 0.08) }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong id="grand-total">${{ "%.2f"|format(total + 5 + (total * 0.08)) }}</strong>
+                    </div>
+                    
+                    <a href="{{ url_for('checkout') }}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                    </a>
+                    <a href="{{ url_for('buy_medicines') }}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Prescription Upload -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-prescription-bottle-alt me-2"></i>Prescription Required?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">If any of your medicines require a prescription, please upload it here.</p>
+                    <div class="mb-3">
+                        <input type="file" class="form-control" id="prescriptionUpload" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <button class="btn btn-warning btn-sm w-100">
+                        <i class="fas fa-upload me-2"></i>Upload Prescription
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+<footer class="footer py-4 bg-light mt-5">
+    <div class="container text-center">
+        <p>&copy; 2025 Healthcare24/7. All rights reserved.</p>
+        <p>Providing quality healthcare services with compassion and excellence.</p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateQuantity(itemId, change) {
+    const quantityElement = document.getElementById('quantity-' + itemId);
+    const currentQuantity = parseInt(quantityElement.textContent);
+    const newQuantity = Math.max(1, currentQuantity + change);
+    
+    quantityElement.textContent = newQuantity;
+    
+    // Update item total
+    const itemPrice = parseFloat(document.querySelector('[data-item-id="' + itemId + '"]').dataset.price);
+    const totalElement = document.getElementById('total-' + itemId);
+    totalElement.textContent = '$' + (itemPrice * newQuantity).toFixed(2);
+    
+    // Update order summary
+    updateOrderSummary();
+    
+    // In a real application, this would make an AJAX call to update the server-side cart
+    showToast('Cart updated successfully', 'success');
+}
+
+function removeFromCart(itemId) {
+    if (confirm('Are you sure you want to remove this item from your cart?')) {
+        const cartItem = document.querySelector('[data-item-id="' + itemId + '"]').closest('.cart-item');
+        cartItem.remove();
+        
+        // Update order summary
+        updateOrderSummary();
+        
+        // Check if cart is empty
+        const remainingItems = document.querySelectorAll('.cart-item');
+        if (remainingItems.length === 0) {
+            location.reload();
+        }
+        
+        showToast('Item removed from cart', 'info');
+    }
+}
+
+function updateOrderSummary() {
+    let subtotal = 0;
+    
+    document.querySelectorAll('.cart-item').forEach(item => {
+        const totalText = item.querySelector('[id^="total-"]').textContent;
+        const itemTotal = parseFloat(totalText.replace('$', ''));
+        subtotal += itemTotal;
+    });
+    
+    const deliveryFee = 5.00;
+    const tax = subtotal * 0.08;
+    const grandTotal = subtotal + deliveryFee + tax;
+    
+    document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('tax').textContent = '$' + tax.toFixed(2);
+    document.getElementById('grand-total').textContent = '$' + grandTotal.toFixed(2);
+}
+
+// Prescription upload handler
+document.getElementById('prescriptionUpload').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+        const uploadButton = this.parentNode.nextElementSibling;
+        uploadButton.innerHTML = '<i class="fas fa-check me-2"></i>Prescription Uploaded';
+        uploadButton.classList.remove('btn-warning');
+        uploadButton.classList.add('btn-success');
+    }
+});
+</script>
+{% endblock %}
