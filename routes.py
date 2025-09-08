@@ -4,6 +4,7 @@ from flask import render_template, request, redirect, url_for, flash, session, j
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, and_, func
+from sqlalchemy.exc import IntegrityError
 from app import app, db
 from models import User, Appointment, Message, MedicalRecord, Medicine, MedicineOrder, MedicineOrderItem, LabTest, LabTestBooking, Notification
 from forms import LoginForm, RegistrationForm, AppointmentForm, MessageForm, MedicalRecordForm, MedicineOrderForm, LabTestBookingForm, ProfileForm, SearchForm
@@ -395,14 +396,19 @@ def staff_payment_info():
 def staff_settings():
     if not current_user.is_staff():
         return redirect(url_for('patient_dashboard'))
-    
+
     form = ProfileForm(obj=current_user)
     if form.validate_on_submit():
-        form.populate_obj(current_user)
-        db.session.commit()
-        flash('Profile updated successfully!', 'success')
-        return redirect(url_for('staff_settings'))
-    
+        try:
+            form.populate_obj(current_user)
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('staff_settings'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('Email address already exists. Please use a different email.', 'danger')
+            return redirect(url_for('staff_settings'))
+
     return render_template('staff_settings.html', form=form)
 
 # Appointment Management
