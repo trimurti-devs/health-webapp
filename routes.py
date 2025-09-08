@@ -196,8 +196,7 @@ def staff_dashboard():
                          appointments=todays_appointments,
                          messages=recent_messages)
 
-# Patient Settings Route
-# Removed duplicate patient_settings route to fix AssertionError
+
 
 # Patient Messages List Route
 @app.route('/patient/messages')
