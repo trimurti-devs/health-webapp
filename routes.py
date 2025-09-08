@@ -32,7 +32,8 @@ def login():
             login_user(user, remember=True)
             flash('Login successful!', 'success')
             next_page = request.args.get('next')
-            if next_page:
+            # Security check for next_page to prevent open redirect attacks
+            if next_page and next_page.startswith('/'):
                 return redirect(next_page)
             return redirect(url_for('index'))
         else:
@@ -158,22 +159,27 @@ def patient_profile():
 def patient_settings():
     if current_user.is_staff():
         return redirect(url_for('staff_dashboard'))
-    
+
     form = ProfileForm(obj=current_user)
     if form.validate_on_submit():
-        form.populate_obj(current_user)
-        # Handle profile picture upload
-        if form.profile_picture.data and not isinstance(form.profile_picture.data, str):
-            file = form.profile_picture.data
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-            # Save only the filename string, not the FileStorage object
-            current_user.profile_picture = filename
-        db.session.commit()
-        flash('Profile updated successfully!', 'success')
-        return redirect(url_for('patient_settings'))
-    
+        try:
+            form.populate_obj(current_user)
+            # Handle profile picture upload
+            if form.profile_picture.data and not isinstance(form.profile_picture.data, str):
+                file = form.profile_picture.data
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                # Save only the filename string, not the FileStorage object
+                current_user.profile_picture = filename
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('patient_settings'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('Email address already exists. Please use a different email.', 'danger')
+            return redirect(url_for('patient_settings'))
+
     return render_template('patient_settings.html', form=form)
 
 # Staff Dashboard Routes
